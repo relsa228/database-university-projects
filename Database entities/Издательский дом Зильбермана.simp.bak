@@ -19,7 +19,7 @@
     <entity-ids>
       <counter>
         <item-type type-id="group" type="Group" />
-        <value>3549</value>
+        <value>3553</value>
       </counter>
       <counter>
         <item-type type-id="class" type="Class" />
@@ -149,6 +149,16 @@
         <phone-number />
         <description />
         <color>#00000000</color>
+        <working-schedule uid="ws-428b2257fd5e466794a04698d5c856a4" hours="8" monday="8" tuesday="8" wednesday="8" thursday="8" friday="8" saturday="0" sunday="0" />
+      </person>
+      <person id="">
+        <first-name>Артемий</first-name>
+        <last-name>Штирнер</last-name>
+        <role />
+        <e-mail />
+        <phone-number />
+        <description />
+        <color>#00000000</color>
       </person>
     </persons>
     <teams />
@@ -167,18 +177,18 @@
       <type id="uuid" tid="" name="uuid" description="" />
       <type id="Сотрудник" tid="Class:48f9e44ad809496b828bf7e5c17aab1f" name="Сотрудник" description="" class-ref="48f9e44ad809496b828bf7e5c17aab1f" />
       <type id="выполнения" tid="" name="выполнения" description="" />
-      <type id="Ритейлер" tid="Class:61717ca9151d497bab3d43b4dc260f2b" name="Ритейлер" description="" class-ref="61717ca9151d497bab3d43b4dc260f2b" />
       <type id="открытия" tid="" name="открытия" description="" />
+      <type id="Ритейлер" tid="Class:61717ca9151d497bab3d43b4dc260f2b" name="Ритейлер" description="" class-ref="61717ca9151d497bab3d43b4dc260f2b" />
       <type id="закрытия" tid="" name="закрытия" description="" />
-      <type id="книг" tid="" name="книг" description="" />
       <type id="центра" tid="" name="центра" description="" />
+      <type id="книг" tid="" name="книг" description="" />
       <type id="UUID" tid="" name="UUID" description="" />
-      <type id="Автор" tid="Class:92b6bb67ff3746d0873a4622252d7960" name="Автор" description="" class-ref="92b6bb67ff3746d0873a4622252d7960" />
       <type id="Заказ" tid="Class:e6e5c6ce295040d08fbaef7c95b43953" name="Заказ" description="" class-ref="e6e5c6ce295040d08fbaef7c95b43953" />
+      <type id="Автор" tid="Class:92b6bb67ff3746d0873a4622252d7960" name="Автор" description="" class-ref="92b6bb67ff3746d0873a4622252d7960" />
       <type id="номер" tid="" name="номер" description="" />
       <type id="Поставщик" tid="Class:66f3ad84fff44d608df99040c03abfdb" name="Поставщик" description="" class-ref="66f3ad84fff44d608df99040c03abfdb" />
-      <type id="Произведение" tid="Class:716f60858952498cb72f5012350af6c2" name="Произведение" description="" class-ref="716f60858952498cb72f5012350af6c2" />
       <type id="Партия" tid="Class:00b19c222c7f4a569244f535e98c59b0" name="Партия" description="" class-ref="00b19c222c7f4a569244f535e98c59b0" />
+      <type id="Произведение" tid="Class:716f60858952498cb72f5012350af6c2" name="Произведение" description="" class-ref="716f60858952498cb72f5012350af6c2" />
       <type id="Печатный центр" tid="Class:ae2f217d2fb349d193a2825b97c66235" name="Печатный центр" description="" class-ref="ae2f217d2fb349d193a2825b97c66235" />
     </custom-types>
   </types>
@@ -569,9 +579,9 @@
       <structural-feature type="" type-id="" />
       <property />
     </item>
-    <item id="c56e7c85248c41d8bf3960f8924cb277" cid="PROP060" type="property" name="" style-class="" creator="" creation-date="09/24/2022 01:51:05" visibility="private">
+    <item id="312eb28a2dec451a97ba9667784c304b" cid="PROP044" type="property" name="Ответсвенный менеджер" style-class="" creator="" creation-date="09/24/2022 01:46:35" visibility="private">
       <feature />
-      <structural-feature type="Печатный центр" type-id="Печатный центр" />
+      <structural-feature type="" type-id="" />
       <property />
     </item>
     <item id="fb225cbe346d435589c843b5f4819c56" cid="PROP015" type="property" name="Название" style-class="" creator="" creation-date="09/24/2022 01:36:30" visibility="private">
@@ -579,9 +589,9 @@
       <structural-feature type="" type-id="" />
       <property />
     </item>
-    <item id="312eb28a2dec451a97ba9667784c304b" cid="PROP044" type="property" name="Ответсвенный менеджер" style-class="" creator="" creation-date="09/24/2022 01:46:35" visibility="private">
+    <item id="c56e7c85248c41d8bf3960f8924cb277" cid="PROP060" type="property" name="" style-class="" creator="" creation-date="09/24/2022 01:51:05" visibility="private">
       <feature />
-      <structural-feature type="" type-id="" />
+      <structural-feature type="Печатный центр" type-id="Печатный центр" />
       <property />
     </item>
     <item id="d5acb4f463574f449ef4aebcc75abff3" cid="PROP016" type="property" name="Общее кол-во заказов" style-class="" creator="" creation-date="09/24/2022 01:36:37" visibility="private">
@@ -646,7 +656,7 @@
       </meta>
       <abstract-items />
       <sub-models />
-      <diagram type="entity-relationship" id="p3248bcb5edaf40909236bc1f36dfbb0d_926008260" name="DatabaseEntitiesRelation" order-index="2" expanded="true" overview-order-index="0" uid="" show-id="false" show-name="true" show-parent-name="false" name-style="local-auto-parents" show-stereotypes="true" show-tagged-values="false" show-template-parameters="true" show-fields="true" show-field-tags="true" show-empty-compartments="true" show-special-indicators="false" show-rules="true" show-attributes="true" show-attribute-visibility="true" show-operations="true" show-operation-parameters="true" show-operation-visibility="true" show-visibility-sign="true" show-nullability="true" show-sequence-number="false" show-extension-points="false" show-relationship-texts="true" show-data="true" show-description="false" show-field-description="false" auto-routed-paths="false" default-line-style="default" view-location="-255,-256" zoom="0.5">
+      <diagram type="entity-relationship" id="p3248bcb5edaf40909236bc1f36dfbb0d_926008260" name="DatabaseEntitiesRelation" order-index="2" expanded="true" overview-order-index="0" uid="" show-id="false" show-name="true" show-parent-name="false" name-style="local-auto-parents" show-stereotypes="true" show-tagged-values="false" show-template-parameters="true" show-fields="true" show-field-tags="true" show-empty-compartments="true" show-special-indicators="false" show-rules="true" show-attributes="true" show-attribute-visibility="true" show-operations="true" show-operation-parameters="true" show-operation-visibility="true" show-visibility-sign="true" show-nullability="true" show-sequence-number="false" show-extension-points="false" show-relationship-texts="true" show-data="true" show-description="false" show-field-description="false" auto-routed-paths="false" default-line-style="default" view-location="-199,-412" zoom="0.7">
         <style>
           <background-color index="1" color="#FFFFFFFF" />
           <background-color index="2" color="#FFFFFFFF" />
@@ -685,17 +695,17 @@
             </attributes>
             <indexes />
           </item>
-          <item id="19c9a752818d43a8acd3d649d23c1615" cid="REL059" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="11/16/2022 15:05:19" from="1c354d60ba314b01b37d413051eeb015" to="3e63906c2c76421885a011e5630ed384">
-            <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="1..*">
-              <attribute-pairs>
-                <attribute-pair from-attribute="a38a1b7bd681740109c7d02d20a20b857488" to-attribute="ad35167dec5ec4773b5838b3ff841f10022" />
-              </attribute-pairs>
-            </erd-relation>
-          </item>
           <item id="1e3dd29954de403e81cf7f9858f128c7" cid="REL045" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="10/08/2022 11:16:51" from="333abe14498647d1aa40d366ddec7de9" to="ae2084b124704d2b8e14d43a843c275e">
             <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="0..*">
               <attribute-pairs>
                 <attribute-pair from-attribute="aa6315ba580f842c193be8e77ae1de5b7773" to-attribute="a23da79ca83184e5d92f2199c30f40b2a490" />
+              </attribute-pairs>
+            </erd-relation>
+          </item>
+          <item id="19c9a752818d43a8acd3d649d23c1615" cid="REL059" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="11/16/2022 15:05:19" from="1c354d60ba314b01b37d413051eeb015" to="3e63906c2c76421885a011e5630ed384">
+            <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="1..*">
+              <attribute-pairs>
+                <attribute-pair from-attribute="a38a1b7bd681740109c7d02d20a20b857488" to-attribute="ad35167dec5ec4773b5838b3ff841f10022" />
               </attribute-pairs>
             </erd-relation>
           </item>
@@ -707,7 +717,7 @@
             </erd-relation>
           </item>
           <item id="dbe3b46c77e54949bd7aa69ff7688502" cid="REL057" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="10/08/2022 11:33:09" from="94870b1e21bf4ea6ab19e49e5795ce50" to="f20f70a977c3412cab0ddbaa33a261c9">
-            <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="0..*">
+            <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="1..*">
               <attribute-pairs>
                 <attribute-pair from-attribute="ab52fc7f3492041df841ff3381da1314d436" to-attribute="a085d5560001e4ed899dc4e80b647ce53730" />
               </attribute-pairs>
@@ -742,13 +752,6 @@
               </attribute-pairs>
             </erd-relation>
           </item>
-          <item id="bfdb8c467a6c4c4c972b609493b4e6e5" cid="REL058" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="11/16/2022 15:03:56" from="454ff6ef0ea44fafafe759f1e57f256c" to="3e63906c2c76421885a011e5630ed384">
-            <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="1..*">
-              <attribute-pairs>
-                <attribute-pair from-attribute="a68d5f0853cb5429f9599ab72741a3fbe404" to-attribute="a3d72b5aa26834abcbcf25a120e0aac7e513" />
-              </attribute-pairs>
-            </erd-relation>
-          </item>
           <item id="48220c54c3b34c4bb2fd45f497e11e4e" cid="ENT012" type="erd-entity" name="Заказчик" style-class="" change-tracking-state="added" creator="" creation-date="10/07/2022 23:46:16">
             <entity description="" />
             <attributes>
@@ -759,6 +762,13 @@
               <attribute uid="a33e72db8713c4bb6844fde1030d076ea752" cid="EA058" name="Ответственный_менеджер" type="UUID" type-id="UUID" type-size="" foreign-key="true" primary-key="false" nullable="false" description="" default-value="" auto-increment="false" creation-date="10/07/2022 23:49:45" />
             </attributes>
             <indexes />
+          </item>
+          <item id="bfdb8c467a6c4c4c972b609493b4e6e5" cid="REL058" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="11/16/2022 15:03:56" from="454ff6ef0ea44fafafe759f1e57f256c" to="3e63906c2c76421885a011e5630ed384">
+            <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="1..*">
+              <attribute-pairs>
+                <attribute-pair from-attribute="a68d5f0853cb5429f9599ab72741a3fbe404" to-attribute="a3d72b5aa26834abcbcf25a120e0aac7e513" />
+              </attribute-pairs>
+            </erd-relation>
           </item>
           <item id="657400af4f464468abccc422382ca9d5" cid="ENT009" type="erd-entity" name="Печатный центр" style-class="" change-tracking-state="added" creator="" creation-date="10/07/2022 19:09:11">
             <entity description="" />
@@ -874,6 +884,12 @@
               <owned-item ref="909f13066c034ed9b30b4dab4571536b" />
               <owned-item ref="7a25bf96f83c40ae8bc2e1b37bf9933d" />
               <owned-item ref="884a17b1b2b1424897db249cb1a28d86" />
+              <owned-item ref="8f9f8bf656ad4a75ac665009ecdf1b5f" />
+              <owned-item ref="9621db8ad87347c3ae44eec96ed1da77" />
+              <owned-item ref="7360a28db9384308a24c8de24b40c690" />
+              <owned-item ref="909f13066c034ed9b30b4dab4571536b" />
+              <owned-item ref="7a25bf96f83c40ae8bc2e1b37bf9933d" />
+              <owned-item ref="884a17b1b2b1424897db249cb1a28d86" />
             </owned-items>
             <attributes>
               <attribute id="a8fcdd8a9ec474a208743f02c6f17b2d8149" cid="PROP003" name="Имя" creation-date="09/24/2022 01:31:33" property-ref="884a17b1b2b1424897db249cb1a28d86" />
@@ -887,13 +903,6 @@
               <source-code language="ActionScript" />
             </source-codes>
           </item>
-          <item id="36b3c88af2a644e189fe4bf3fbede2b5" cid="REL027" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="10/07/2022 19:23:57" from="8ed6264f13df4504b4f6969cd9ea7550" to="05697b6f528840b987744ac4abc30942">
-            <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="1..*">
-              <attribute-pairs>
-                <attribute-pair from-attribute="ac91c0f1692794792a4b664a9ca377e6d377" to-attribute="af45b041d4d0b4d1b910e4272a93074db467" />
-              </attribute-pairs>
-            </erd-relation>
-          </item>
           <item id="669f8ad255c6482bb90dec617a5c655d" cid="ENT015" type="erd-entity" name="Статус печати" style-class="" change-tracking-state="added" creator="" creation-date="10/08/2022 11:25:17">
             <entity description="" />
             <attributes>
@@ -901,6 +910,13 @@
               <attribute uid="a2852f2caac4544eb85f17939cc01245b371" cid="EA067" name="Статус_печати" type="String" type-id="Uml.String" type-size="" foreign-key="false" primary-key="false" nullable="false" description="" default-value="" auto-increment="false" creation-date="10/08/2022 11:25:55" />
             </attributes>
             <indexes />
+          </item>
+          <item id="36b3c88af2a644e189fe4bf3fbede2b5" cid="REL027" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="10/07/2022 19:23:57" from="8ed6264f13df4504b4f6969cd9ea7550" to="05697b6f528840b987744ac4abc30942">
+            <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="1..*">
+              <attribute-pairs>
+                <attribute-pair from-attribute="ac91c0f1692794792a4b664a9ca377e6d377" to-attribute="af45b041d4d0b4d1b910e4272a93074db467" />
+              </attribute-pairs>
+            </erd-relation>
           </item>
           <item id="3e63906c2c76421885a011e5630ed384" cid="ENT017" type="erd-entity" name="Жанровая принадлежность" style-class="" change-tracking-state="added" creator="" creation-date="11/16/2022 14:58:07">
             <entity description="" />
@@ -947,6 +963,13 @@
             </attributes>
             <indexes />
           </item>
+          <item id="2d1f7d65ba8140cc9c5c586d110ee26e" cid="REL043" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="10/08/2022 11:15:56" from="ae2084b124704d2b8e14d43a843c275e" to="48220c54c3b34c4bb2fd45f497e11e4e">
+            <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="0..*">
+              <attribute-pairs>
+                <attribute-pair from-attribute="a479cbf56c13d483d95982be0964146f8754" to-attribute="a33e72db8713c4bb6844fde1030d076ea752" />
+              </attribute-pairs>
+            </erd-relation>
+          </item>
           <item id="ae2084b124704d2b8e14d43a843c275e" cid="ENT007" type="erd-entity" name="Сотрудник" style-class="" change-tracking-state="added" creator="" creation-date="10/07/2022 19:05:07">
             <entity description="" />
             <attributes>
@@ -960,13 +983,6 @@
               <attribute uid="ad068d6ad05c24803a64fefcdf0220e90451" cid="EA061" name="Дата_последней_авторизации" type="DateTime" type-id="Uml.DateTime" type-size="" foreign-key="false" primary-key="false" nullable="true" description="" default-value="" auto-increment="false" creation-date="10/08/2022 10:05:57" />
             </attributes>
             <indexes />
-          </item>
-          <item id="2d1f7d65ba8140cc9c5c586d110ee26e" cid="REL043" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="10/08/2022 11:15:56" from="ae2084b124704d2b8e14d43a843c275e" to="48220c54c3b34c4bb2fd45f497e11e4e">
-            <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="0..*">
-              <attribute-pairs>
-                <attribute-pair from-attribute="a479cbf56c13d483d95982be0964146f8754" to-attribute="a33e72db8713c4bb6844fde1030d076ea752" />
-              </attribute-pairs>
-            </erd-relation>
           </item>
           <item id="f39d0753041e49cfb32047bbcaf76ef4" cid="REL031" type="erd-relationship" name="" style-class="" change-tracking-state="added" creator="" creation-date="10/07/2022 23:53:19" from="48220c54c3b34c4bb2fd45f497e11e4e" to="ae2084b124704d2b8e14d43a843c275e">
             <erd-relation type="Identifying" multiplicity-from="1" multiplicity-to="1">

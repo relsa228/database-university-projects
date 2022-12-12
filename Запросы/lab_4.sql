@@ -61,3 +61,5 @@ SELECT * FROM authors EXCEPT SELECT * FROM authors WHERE id IN (SELECT id FROM m
 
 Все аторы, которые являются менеджерами
 SELECT * FROM authors INTERSECT SELECT * FROM authors WHERE id IN (SELECT id FROM managers)
+
+название жанр 
