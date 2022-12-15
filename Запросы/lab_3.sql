@@ -133,7 +133,7 @@ INSERT INTO "tab_name" (col1, col2, col3) VALUES (val1, val2, val3)
 Менеджеры (запомни пароли)
 INSERT INTO "managers" VALUES (gen_random_uuid(), 'Исмаил', 'Голдштейн', 'Яковлевич', 'goldstein', 1, crypt('qwerty123', gen_salt('bf', 8)), '2021-10-12 11:42:39');
 INSERT INTO "managers" VALUES (gen_random_uuid(), 'Авраам', 'Вайгельман', 'Даянович', 'vaigelman', 2, crypt('qwe123rty', gen_salt('bf', 8)), '2022-09-05 13:40:31');
-INSERT INTO "managers" VALUES (gen_random_uuid(), 'Леви', 'Ойтенберг', 'Аланович', 'oitenberg', 3, crypt('123qwerty', gen_salt('bf', 8)), '2021-07-14 23:22:40');
+INSERT INTO "managers" VALUES (gen_random_uuid(), 'Леви', 'Ойтенберг', 'Аланович', 'oitenberg', 2, crypt('123qwerty', gen_salt('bf', 8)), '2021-07-14 23:22:40');
 INSERT INTO "managers" VALUES (gen_random_uuid(), 'Джозеф', 'Керштейн', 'Давидович', 'kerstein', 2, crypt('qwe12345rty', gen_salt('bf', 8)), '2022-09-06 13:40:31');
 INSERT INTO "managers" VALUES (gen_random_uuid(), 'Ефим', 'Шварцман', 'Адамович', 'schwartzman', 2, crypt('qwe123456rty', gen_salt('bf', 8)), '2022-10-07 15:12:00');
 ---

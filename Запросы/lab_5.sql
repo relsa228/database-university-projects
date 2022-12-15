@@ -23,18 +23,39 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 AS '
   BEGIN 
-  	IF NEW.print_state = 4 then
-  		IF (SELECT COUNT(*) from batches WHERE "order" = NEW."order") = (SELECT COUNT(*) from batches WHERE "order" = NEW."order" AND print_state = 4) then
-  			UPDATE orders Set order_state = 4 WHERE id = NEW."order";
-  			UPDATE batches SET print_state = 5 WHERE "order" = NEW."order";
-  		end if;
-  	end if;
+    IF NEW.print_state = 4 then
+      UPDATE print_centers SET publication_batch = publication_batch + 1 WHERE id = NEW.print_center;
+      IF (SELECT COUNT(*) from batches WHERE "order" = NEW."order") = (SELECT COUNT(*) from batches WHERE "order" = NEW."order" AND print_state = 4) then
+        UPDATE orders Set order_state = 4 WHERE id = NEW."order";
+        UPDATE batches SET print_state = 5 WHERE "order" = NEW."order";
+      end if;
+    end if;
+    IF NEW.print_state = 3 then
+      UPDATE print_centers SET publication_batch = publication_batch - 1 WHERE id = NEW.print_center;
+    end if;
   RETURN NEW;
   END;
   ';
   
 CREATE OR REPLACE TRIGGER send_order AFTER UPDATE OR INSERT ON batches
   FOR EACH ROW EXECUTE PROCEDURE send_order()
+
+3. Инкремент каунтера заказов
+CREATE OR REPLACE FUNCTION inc_order_count() 
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS '
+  BEGIN 
+  
+    UPDATE customers
+    SET order_count = order_count + 1
+    WHERE customers.id = NEW.customer;
+  
+  RETURN NEW;
+  END;';
+
+CREATE OR REPLACE TRIGGER inc_order_count AFTER INSERT ON orders
+  FOR EACH ROW EXECUTE PROCEDURE inc_order_count();
   --------------------------------------------Процедуры:---------------------------------------------------
 1. Отправить со склада все партии определенного заказа
 CREATE PROCEDURE given_away_order("order_id" TEXT)
