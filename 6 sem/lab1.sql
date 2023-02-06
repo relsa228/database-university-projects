@@ -21,3 +21,31 @@ begin
         insert into MY_TABLE ("id", VAL) VALUES (lab1_sec.nextval, random_num);
     END LOOP;
 end;
+
+--Функция подсчета
+create or replace function get_parity
+return boolean
+is
+    parity_counter number;
+    odd_counter number;
+begin
+    select COUNT(VAL) into parity_counter from MY_TABLE WHERE MOD(VAL, 2) = 0;
+    select COUNT(VAL) into odd_counter from MY_TABLE WHERE MOD(VAL, 2) = 1;
+    if parity_counter > odd_counter then
+        return true;
+    else
+        return false;
+    end if;
+end
+
+--Вызов функции
+DECLARE
+   res boolean;
+BEGIN
+   res := get_parity();
+   if res then
+        dbms_output.put_line('True');
+    else
+       dbms_output.put_line('False');
+   end if;
+END;
