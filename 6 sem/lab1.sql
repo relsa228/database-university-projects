@@ -92,3 +92,23 @@ BEGIN
    update MY_TABLE set VAL=new_value where "id"=updt_id;
     commit;
 END;
+
+--Функция для зарплаты
+create or replace function year_salary (salary in number, percent in number)
+return number
+is
+    normal_percent number;
+    result_salary number;
+begin
+    if salary <= 0 or percent < 0 then
+        dbms_output.put_line('Incorrect input.');
+        return -1;
+    end if;
+    normal_percent := percent / 100;
+    result_salary := (1 + normal_percent) * 12 * salary;
+    return result_salary;
+exception
+    WHEN OTHERS THEN
+        dbms_output.put_line('Internal error.');
+        return -1;
+end;
