@@ -93,6 +93,7 @@ BEGIN
     commit;
 END;
 
+--------------------------------------------------------------------------------------
 --Функция для зарплаты
 create or replace function year_salary (salary in number, percent in number)
 return number
