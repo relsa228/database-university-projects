@@ -113,3 +113,22 @@ exception
         dbms_output.put_line('Internal error.');
         return -1;
 end;
+
+--------------------------------------------------------------------------------------
+--Специальное задание
+create or replace function get_insert_2 (inpt_value in number)
+return varchar2
+is
+    result_str varchar2(100);
+    get_var number;
+begin
+    select VAL into get_var from MY_TABLE where "id" = inpt_value;
+
+        result_str := 'insert into MY_TABLE ("id", VAL) VALUES ( '|| inpt_value ||', ' || get_var || ');';
+        dbms_output.put_line(result_str);
+        return result_str;
+
+exception WHEN NO_DATA_FOUND THEN
+       dbms_output.put_line('Error');
+       return 'Error';
+end;
