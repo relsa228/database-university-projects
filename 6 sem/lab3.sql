@@ -132,3 +132,32 @@ SELECT "t_name" FROM DIST_TABLES
 SELECT * FROM ALL_TAB_COLUMNS WHERE OWNER='LAB3_DEV';
 SELECT * FROM ALL_CONSTRAINTS WHERE OWNER='LAB3_DEV';
 SELECT * FROM ALL_TAB_COLUMNS WHERE table_name='ALL_CONSTRAINTS';
+
+------------------------------------------------------------------------------
+--2. Сравнение функций
+select *
+from   all_objects
+where  owner = 'LAB3_DEV'
+and    object_type = 'FUNCTION';
+
+select * from ALL_ARGUMENTS where owner='LAB3_DEV';
+
+create or replace function LAB3_DEV.hello
+return boolean
+is
+    parity_counter number;
+    odd_counter number;
+begin
+    dbms_output.put_line('Hello'); 
+    return true;
+end;
+
+create or replace function LAB3_DEV.hello_second (salary in number, percent in varchar2)
+return boolean
+is
+    parity_counter number;
+    odd_counter number;
+begin
+    dbms_output.put_line('Hello'); 
+    return true;
+end;
