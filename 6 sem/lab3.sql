@@ -181,6 +181,29 @@ BEGIN
             end if;
         end if;
     end loop;
+
+--Модуль проверки пакетов
+    dbms_output.put_line('----Packages----');
+    for pkg in (select * from all_objects WHERE object_type='PACKAGE' AND owner=dev_schema) loop
+        select COUNT(*) into funct_count from all_objects where owner=prod_schema and object_type='PACKAGE' and object_name=pkg.OBJECT_NAME;
+        if funct_count=0 THEN
+            dbms_output.put_line(pkg.object_name);
+        ELSE
+            SELECT count(*) into f1_arg_count from all_procedures where owner=dev_schema AND OBJECT_NAME=pkg.OBJECT_NAME;
+            SELECT count(*) into f2_arg_count from all_procedures where owner=prod_schema AND OBJECT_NAME=pkg.OBJECT_NAME;
+            
+            if f1_arg_count <> f2_arg_count then
+                dbms_output.put_line(pkg.object_name);
+            else
+                for proc_pkg in (select * from all_procedures where owner=dev_schema and object_name=pkg.object_name) loop
+                    select COUNT(*) into funct_count from all_procedures where owner=prod_schema and object_name=pkg.object_name;
+                    if funct_count=0 THEN
+                        dbms_output.put_line(pkg.object_name);
+                    end if;
+                end loop;
+            end if;
+        end if;
+    end loop;
 END;
 
 
@@ -234,3 +257,10 @@ drop function LAB3_dev.hello;
 
 drop function LAB3_prod.hello_second;
 drop function LAB3_prod.hello;
+
+
+
+drop PACKAGE LAB3_dev.cust_sal;
+
+select * from all_objects WHERE object_type='PACKAGE' AND owner='LAB3_DEV';
+select * from all_procedures where owner='LAB3_DEV' and object_name='TESTPKG';
