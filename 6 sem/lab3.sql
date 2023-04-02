@@ -81,6 +81,9 @@ DECLARE
     f1_arg_count NUMBER;
     f2_arg_count NUMBER;
     arg_count NUMBER;
+
+    ddl_out varchar2(225);
+    funct_ending varchar2(225);
 BEGIN
 
 --Модуль обхода дев таблицы и поиска отличий
@@ -130,28 +133,68 @@ BEGIN
         dbms_output.put_line(tab."t_name"); 
     END LOOP;
 
---Модуль проверки функций
+--Модуль проверки функций (выводит)
     dbms_output.put_line('----FUNCTIONS----');
     for funct in (select * from all_objects WHERE object_type='FUNCTION' AND owner=dev_schema) loop
         select COUNT(*) into funct_count from all_objects where owner=prod_schema and object_type='FUNCTION' and object_name=funct.object_name;
         if funct_count=0 THEN
             dbms_output.put_line(funct.object_name);
+            ddl_out := 'CREATE OR REPLACE FUNCTION ' || prod_schema || '.' || funct.object_name || ' (';
+            dbms_output.put_line(ddl_out);
+            for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name AND POSITION<>0 AND PACKAGE_NAME IS NULL) loop
+                ddl_out := proc_out.DATA_TYPE || ' ' || proc_out.ARGUMENT_NAME;
+                dbms_output.put_line(ddl_out);
+            end loop;
+            dbms_output.put_line(')');
+            SELECT DATA_TYPE into funct_ending from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name AND POSITION=0;
+            funct_ending := 'return ' || funct_ending;
+            dbms_output.put_line(funct_ending);
         ELSE
             SELECT count(*) into f1_arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name;
             SELECT count(*) into f2_arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name;
             if f1_arg_count <> f2_arg_count then
                 dbms_output.put_line(funct.object_name);
+                ddl_out := 'CREATE OR REPLACE FUNCTION ' || prod_schema || '.' || funct.object_name || ' (';
+                dbms_output.put_line(ddl_out);
+                for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name AND POSITION<>0 AND PACKAGE_NAME IS NULL) loop
+                    ddl_out := proc_out.DATA_TYPE || ' ' || proc_out.ARGUMENT_NAME;
+                    dbms_output.put_line(ddl_out);
+                end loop;
+                dbms_output.put_line(')');
+                SELECT DATA_TYPE into funct_ending from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name AND POSITION=0;
+                funct_ending := 'return ' || funct_ending;
+                dbms_output.put_line(funct_ending);
             else
                 for arg in (select * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
                     if arg.position=0 THEN
                         SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name and DATA_TYPE=arg.DATA_TYPE and POSITION=0;
                         if arg_count=0 THEN
                             dbms_output.put_line(funct.object_name);
+                            ddl_out := 'CREATE OR REPLACE FUNCTION ' || prod_schema || '.' || funct.object_name || ' (';
+                            dbms_output.put_line(ddl_out);
+                            for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name AND POSITION<>0 AND PACKAGE_NAME IS NULL) loop
+                                ddl_out := proc_out.DATA_TYPE || ' ' || proc_out.ARGUMENT_NAME;
+                                dbms_output.put_line(ddl_out);
+                            end loop;
+                            dbms_output.put_line(')');
+                            SELECT DATA_TYPE into funct_ending from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name AND POSITION=0;
+                            funct_ending := 'return ' || funct_ending;
+                            dbms_output.put_line(funct_ending);
                         end if;
                     else
                         SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name and DATA_TYPE=arg.DATA_TYPE;
                         if arg_count=0 THEN
                             dbms_output.put_line(funct.object_name);
+                            ddl_out := 'CREATE OR REPLACE FUNCTION ' || prod_schema || '.' || funct.object_name || ' (';
+                            dbms_output.put_line(ddl_out);
+                            for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name AND POSITION<>0 AND PACKAGE_NAME IS NULL) loop
+                                ddl_out := proc_out.DATA_TYPE || ' ' || proc_out.ARGUMENT_NAME;
+                                dbms_output.put_line(ddl_out);
+                            end loop;
+                            dbms_output.put_line(')');
+                            SELECT DATA_TYPE into funct_ending from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name AND POSITION=0;
+                            funct_ending := 'return ' || funct_ending;
+                            dbms_output.put_line(funct_ending);
                         end if;
                     end if;
                 end loop;
@@ -159,23 +202,44 @@ BEGIN
         end if;
     end loop;
 
---Модуль проверки процедур
+--Модуль проверки процедур (выводит)
     dbms_output.put_line('----PROCEDURE----');
     for funct in (select * from all_objects WHERE object_type='PROCEDURE' AND owner=dev_schema) loop
         select COUNT(*) into funct_count from all_objects where owner=prod_schema and object_type='PROCEDURE' and object_name=funct.object_name;
         if funct_count=0 THEN
             dbms_output.put_line(funct.object_name);
+            ddl_out := 'CREATE OR REPLACE PROCEDURE ' || prod_schema || '.' || funct.object_name || ' (';
+            dbms_output.put_line(ddl_out);
+            for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
+                ddl_out := proc_out.ARGUMENT_NAME || ' in ' || proc_out.DATA_TYPE;
+                dbms_output.put_line(ddl_out);
+            end loop;
+            dbms_output.put_line(')');
         ELSE
             SELECT count(*) into f1_arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name;
             SELECT count(*) into f2_arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name;
             
             if f1_arg_count <> f2_arg_count then
                 dbms_output.put_line(funct.object_name);
+                ddl_out := 'CREATE OR REPLACE PROCEDURE ' || prod_schema || ' . ' || funct.object_name || ' (';
+                dbms_output.put_line(ddl_out);
+                for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
+                    ddl_out := proc_out.ARGUMENT_NAME || ' in ' || proc_out.DATA_TYPE;
+                    dbms_output.put_line(ddl_out);
+                end loop;
+                dbms_output.put_line(')');
             else
                 for arg in (select * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
                     SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name and DATA_TYPE=arg.DATA_TYPE;
                     if arg_count=0 THEN
                         dbms_output.put_line(funct.object_name);
+                        ddl_out := 'CREATE OR REPLACE PROCEDURE ' || prod_schema || '.' || funct.object_name || ' (';
+                        dbms_output.put_line(ddl_out);
+                        for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
+                            ddl_out := proc_out.ARGUMENT_NAME || ' in ' || proc_out.DATA_TYPE;
+                            dbms_output.put_line(ddl_out);
+                        end loop;
+                        dbms_output.put_line(')');
                     end if;
                 end loop;
             end if;
@@ -196,9 +260,11 @@ BEGIN
                 dbms_output.put_line(pkg.object_name);
             else
                 for proc_pkg in (select * from all_procedures where owner=dev_schema and object_name=pkg.object_name) loop
-                    select COUNT(*) into funct_count from all_procedures where owner=prod_schema and object_name=pkg.object_name;
-                    if funct_count=0 THEN
-                        dbms_output.put_line(pkg.object_name);
+                    if proc_pkg.SUBPROGRAM_ID<>0 then
+                        select COUNT(*) into funct_count from all_procedures where owner=prod_schema and object_name=pkg.object_name and PROCEDURE_NAME=proc_pkg.PROCEDURE_NAME;
+                        if funct_count=0 THEN
+                            dbms_output.put_line(pkg.object_name);
+                        end if;
                     end if;
                 end loop;
             end if;
@@ -220,7 +286,7 @@ from   all_objects
 where  owner = 'LAB3_DEV'
 and    object_type = 'PROCEDURE';
 
-select * from ALL_ARGUMENTS where owner='LAB3_DEV' and OBJECT_NAME='HELLO_PROC';
+select * from ALL_ARGUMENTS where owner='LAB3_DEV' and OBJECT_NAME='HELLO_SECOND';
 
 create or replace function LAB3_dev.hello
 return number
@@ -258,6 +324,9 @@ drop function LAB3_dev.hello;
 drop function LAB3_prod.hello_second;
 drop function LAB3_prod.hello;
 
+CREATE or replace PACKAGE LAB3_PROD.TESTPKG AS 
+   PROCEDURE hello_second(salary in number, percent in VARCHAR2);
+END TESTPKG;
 
 
 drop PACKAGE LAB3_dev.cust_sal;
