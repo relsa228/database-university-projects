@@ -52,16 +52,15 @@ ALTER USER LAB3_PROD QUOTA UNLIMITED ON USERS;
 GRANT CONNECT, RESOURCE TO LAB3_DEV;
 GRANT CONNECT, RESOURCE TO LAB3_PROD;
 
+DROP table DIST_TABLES;
+DROP table OUT_TABLES;
 create table DIST_TABLES (
         "t_name"  varchar2(128) not null
     );
 
-    create table OUT_TABLES (
-        "t_name"  varchar2(128) not null
-    )
-
-DROP table DIST_TABLES;
-DROP table OUT_TABLES;
+create table OUT_TABLES (
+    "t_name"  varchar2(128) not null
+);
 ------------------------------------------------------------------------------
 --1. Сравнение таблиц
 DECLARE
@@ -77,6 +76,11 @@ DECLARE
     ref_table_count NUMBER;
 
     input_flag BOOLEAN := TRUE;
+
+    funct_count NUMBER;
+    f1_arg_count NUMBER;
+    f2_arg_count NUMBER;
+    arg_count NUMBER;
 BEGIN
 
 --Модуль обхода дев таблицы и поиска отличий
@@ -121,9 +125,62 @@ BEGIN
         SELECT COUNT(*) INTO dist_tab_count FROM DIST_TABLES;
     END LOOP;
 
+    dbms_output.put_line('--------TABLES--------');
     for tab in (SELECT * FROM OUT_TABLES) LOOP
         dbms_output.put_line(tab."t_name"); 
     END LOOP;
+
+--Модуль проверки функций
+    dbms_output.put_line('----FUNCTIONS----');
+    for funct in (select * from all_objects WHERE object_type='FUNCTION' AND owner=dev_schema) loop
+        select COUNT(*) into funct_count from all_objects where owner=prod_schema and object_type='FUNCTION' and object_name=funct.object_name;
+        if funct_count=0 THEN
+            dbms_output.put_line(funct.object_name);
+        ELSE
+            SELECT count(*) into f1_arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name;
+            SELECT count(*) into f2_arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name;
+            if f1_arg_count <> f2_arg_count then
+                dbms_output.put_line(funct.object_name);
+            else
+                for arg in (select * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
+                    if arg.position=0 THEN
+                        SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name and DATA_TYPE=arg.DATA_TYPE and POSITION=0;
+                        if arg_count=0 THEN
+                            dbms_output.put_line(funct.object_name);
+                        end if;
+                    else
+                        SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name and DATA_TYPE=arg.DATA_TYPE;
+                        if arg_count=0 THEN
+                            dbms_output.put_line(funct.object_name);
+                        end if;
+                    end if;
+                end loop;
+            end if;
+        end if;
+    end loop;
+
+--Модуль проверки процедур
+    dbms_output.put_line('----PROCEDURE----');
+    for funct in (select * from all_objects WHERE object_type='PROCEDURE' AND owner=dev_schema) loop
+        select COUNT(*) into funct_count from all_objects where owner=prod_schema and object_type='PROCEDURE' and object_name=funct.object_name;
+        if funct_count=0 THEN
+            dbms_output.put_line(funct.object_name);
+        ELSE
+            SELECT count(*) into f1_arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name;
+            SELECT count(*) into f2_arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name;
+            
+            if f1_arg_count <> f2_arg_count then
+                dbms_output.put_line(funct.object_name);
+            else
+                for arg in (select * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
+                    SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name and DATA_TYPE=arg.DATA_TYPE;
+                    if arg_count=0 THEN
+                        dbms_output.put_line(funct.object_name);
+                    end if;
+                end loop;
+            end if;
+        end if;
+    end loop;
 END;
 
 
@@ -138,26 +195,42 @@ SELECT * FROM ALL_TAB_COLUMNS WHERE table_name='ALL_CONSTRAINTS';
 select *
 from   all_objects
 where  owner = 'LAB3_DEV'
-and    object_type = 'FUNCTION';
+and    object_type = 'PROCEDURE';
 
-select * from ALL_ARGUMENTS where owner='LAB3_DEV';
+select * from ALL_ARGUMENTS where owner='LAB3_DEV' and OBJECT_NAME='HELLO_PROC';
 
-create or replace function LAB3_DEV.hello
-return boolean
+create or replace function LAB3_dev.hello
+return number
 is
     parity_counter number;
     odd_counter number;
 begin
     dbms_output.put_line('Hello'); 
-    return true;
+    return 1;
 end;
 
-create or replace function LAB3_DEV.hello_second (salary in number, percent in varchar2)
-return boolean
+create or replace function LAB3_prod.hello_second(salary in number, percent in VARCHAR2)
+return number
 is
     parity_counter number;
     odd_counter number;
 begin
     dbms_output.put_line('Hello'); 
-    return true;
+    return 1;
 end;
+
+CREATE OR REPLACE PROCEDURE LAB3_prod.hello_proc(start_time IN VARCHAR2, end_time IN number)
+IS
+   cnumber number;
+BEGIN
+    dbms_output.put_line('Hello'); 
+END hello_proc;
+
+drop procedure LAB3_prod.hello_proc;
+drop procedure LAB3_dev.hello_proc;
+
+drop function LAB3_dev.hello_second;
+drop function LAB3_dev.hello;
+
+drop function LAB3_prod.hello_second;
+drop function LAB3_prod.hello;
