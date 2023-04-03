@@ -336,6 +336,116 @@ BEGIN
             end if;
         end if;
     end loop;
+
+
+    dbms_output.put_line('Superfluous objects:');
+--Модуль поиска таблиц на удление
+    for tab in (select * from ALL_TABLES WHERE OWNER=prod_schema) loop
+        SELECT COUNT(*) INTO tab_count FROM ALL_TABLES WHERE OWNER=dev_schema AND TABLE_NAME=tab.TABLE_NAME;
+        IF tab_count=1 THEN
+            for clmn in (SELECT * FROM ALL_TAB_COLUMNS WHERE table_name=tab.TABLE_NAME AND OWNER=prod_schema) loop 
+                SELECT COUNT(*) INTO clmn_count FROM ALL_TAB_COLUMNS WHERE  OWNER=dev_schema AND 
+                                                                            COLUMN_NAME=clmn.COLUMN_NAME AND
+                                                                            DATA_TYPE=clmn.DATA_TYPE AND 
+                                                                            DATA_LENGTH=clmn.DATA_LENGTH;
+                IF clmn_count=0 THEN
+                    ddl_out := 'DROP TABLE ' || tab.TABLE_NAME;
+                    dbms_output.put_line(ddl_out);
+                END IF;
+                EXIT WHEN clmn_count=0;
+            END LOOP;
+        ELSE
+            ddl_out := 'DROP TABLE ' || tab.TABLE_NAME;
+            dbms_output.put_line(ddl_out);
+        END IF;
+    END LOOP;
+
+--Модуль поиска функций на удаление
+    dbms_output.put_line('----FUNCTIONS----');
+    for funct in (select * from all_objects WHERE object_type='FUNCTION' AND owner=prod_schema) loop
+        select COUNT(*) into funct_count from all_objects where owner=dev_schema and object_type='FUNCTION' and object_name=funct.object_name;
+        if funct_count=0 THEN
+            ddl_out := 'DROP FUNCTION ' || funct.object_name;
+            dbms_output.put_line(ddl_out);
+        ELSE
+            SELECT count(*) into f1_arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name;
+            SELECT count(*) into f2_arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name;
+            if f1_arg_count <> f2_arg_count then
+                ddl_out := 'DROP FUNCTION ' || funct.object_name;
+                dbms_output.put_line(ddl_out);
+            else
+                for arg in (select * from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name) loop
+                    if arg.position=0 THEN
+                        SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name and DATA_TYPE=arg.DATA_TYPE and POSITION=0;
+                        if arg_count=0 THEN
+                            ddl_out := 'DROP FUNCTION ' || funct.object_name;
+                            dbms_output.put_line(ddl_out);
+                        end if;
+                    else
+                        SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name and DATA_TYPE=arg.DATA_TYPE;
+                        if arg_count=0 THEN
+                            ddl_out := 'DROP FUNCTION ' || funct.object_name;
+                            dbms_output.put_line(ddl_out);
+                        end if;
+                    end if;
+                end loop;
+            end if;
+        end if;
+    end loop;
+
+--Модуль проверки процедур (выводит)
+    dbms_output.put_line('----PROCEDURE----');
+    for proc in (select * from all_objects WHERE object_type='PROCEDURE' AND owner=prod_schema) loop
+        select COUNT(*) into funct_count from all_objects where owner=dev_schema and object_type='PROCEDURE' and object_name=proc.object_name;
+        if funct_count=0 THEN
+            ddl_out := 'DROP PROCEDURE ' || proc.object_name;
+            dbms_output.put_line(ddl_out);
+        ELSE
+            SELECT count(*) into f1_arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=proc.object_name;
+            SELECT count(*) into f2_arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=proc.object_name;
+            
+            if f1_arg_count <> f2_arg_count then
+                ddl_out := 'DROP PROCEDURE ' || proc.object_name;
+                dbms_output.put_line(ddl_out);
+            else
+                for arg in (select * from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=proc.object_name) loop
+                    SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=proc.object_name and DATA_TYPE=arg.DATA_TYPE;
+                    if arg_count=0 THEN
+                        ddl_out := 'DROP PROCEDURE ' || proc.object_name;
+                        dbms_output.put_line(ddl_out);
+                    end if;
+                end loop;
+            end if;
+        end if;
+    end loop;
+
+--Модуль проверки пакетов (выводит)
+    dbms_output.put_line('----Packages----');
+    for pkg in (select * from all_objects WHERE object_type='PACKAGE' AND owner=prod_schema) loop
+        select COUNT(*) into funct_count from all_objects where owner=dev_schema and object_type='PACKAGE' and object_name=pkg.OBJECT_NAME;
+        if funct_count=0 THEN
+            ddl_out := 'DROP PACKAGE ' || pkg.OBJECT_NAME;
+            dbms_output.put_line(ddl_out);
+        ELSE
+            SELECT count(*) into f1_arg_count from all_procedures where owner=prod_schema AND OBJECT_NAME=pkg.OBJECT_NAME;
+            SELECT count(*) into f2_arg_count from all_procedures where owner=dev_schema AND OBJECT_NAME=pkg.OBJECT_NAME;
+            
+            if f1_arg_count <> f2_arg_count then
+                ddl_out := 'DROP PACKAGE ' || pkg.OBJECT_NAME;
+                dbms_output.put_line(ddl_out);
+            else
+                for proc_pkg in (select * from all_procedures where owner=prod_schema and object_name=pkg.object_name) loop
+                    if proc_pkg.SUBPROGRAM_ID<>0 then
+                        select COUNT(*) into funct_count from all_procedures where owner=dev_schema and object_name=pkg.object_name and PROCEDURE_NAME=proc_pkg.PROCEDURE_NAME;
+                        if funct_count=0 THEN
+                            ddl_out := 'DROP PACKAGE ' || pkg.OBJECT_NAME;
+                            dbms_output.put_line(ddl_out);
+                        end if;
+                    end if;
+                end loop;
+            end if;
+        end if;
+    end loop;
 END;
 
 
