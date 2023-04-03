@@ -21,21 +21,21 @@ create table LAB3_DEV."students"
     group_id number not null
 );
 
+DROP TABLE LAB3_DEV."products";
+CREATE TABLE LAB3_DEV."products" ( 
+    product_id numeric(10) not null,
+    supplier_id numeric(10) not null,
+    CONSTRAINT fk_supplier
+    FOREIGN KEY (supplier_id)
+    REFERENCES  LAB3_DEV."supplier"(supplier_id)
+);
+
 DROP TABLE LAB3_DEV."supplier";
 CREATE TABLE LAB3_DEV."supplier"
 ( supplier_id numeric(10) not null,
   supplier_name varchar2(50) not null,
   contact_name varchar2(50),
   CONSTRAINT supplier_pk PRIMARY KEY (supplier_id)
-);
-
-DROP TABLE LAB3_DEV."products";
-CREATE TABLE LAB3_DEV."products"
-( product_id numeric(10) not null,
-  supplier_id numeric(10) not null,
-  CONSTRAINT fk_supplier
-    FOREIGN KEY (supplier_id)
-    REFERENCES  LAB3_DEV."supplier"(supplier_id)
 );
 
 
@@ -85,8 +85,7 @@ DECLARE
     ddl_out varchar2(225);
     funct_ending varchar2(225);
 BEGIN
-
---Модуль обхода дев таблицы и поиска отличий
+--Модуль обхода дев_таблицы и поиска отличий
     for tab in (select * from ALL_TABLES WHERE OWNER=dev_schema) loop
         SELECT COUNT(*) INTO tab_count FROM ALL_TABLES WHERE OWNER=prod_schema AND TABLE_NAME=tab.TABLE_NAME;
         IF tab_count=1 THEN
@@ -131,6 +130,34 @@ BEGIN
     dbms_output.put_line('--------TABLES--------');
     for tab in (SELECT * FROM OUT_TABLES) LOOP
         dbms_output.put_line(tab."t_name"); 
+        ddl_out := 'CREATE TABLE ' || prod_schema || '.' || '"' || tab."t_name" || '"' || ' (';
+        dbms_output.put_line(ddl_out);
+        for colmn in (SELECT * FROM ALL_TAB_COLUMNS WHERE table_name=tab."t_name" AND OWNER=dev_schema) loop
+            ddl_out := '"' || colmn.COLUMN_NAME || '" ' || colmn.DATA_TYPE || '(' || colmn.DATA_LENGTH || ')';
+            if colmn.DATA_DEFAULT is not NULL THEN
+                ddl_out := ddl_out || ' default ' || colmn.DATA_DEFAULT;
+            end if; 
+            if colmn.NULLABLE='N' THEN
+                ddl_out := ddl_out || ' not null ';
+            end if;
+            dbms_output.put_line(ddl_out);
+        end loop; 
+        for cnstrnt in (SELECT * FROM ALL_CONSTRAINTS WHERE OWNER=dev_schema AND table_name=tab."t_name" AND CONSTRAINT_TYPE='P' AND GENERATED='USER NAME') loop
+            for c_name in (SELECT cols.column_name FROM all_constraints cons, all_cons_columns cols WHERE cols.table_name = tab."t_name" AND cons.constraint_type = 'P'
+                            AND cons.constraint_name = cols.constraint_name AND cons.owner = cols.owner ORDER BY cols.table_name, cols.position) LOOP
+                ddl_out := 'CONSTRAINT ' || cnstrnt.CONSTRAINT_NAME || ' PRIMARY KEY (' || c_name.COLUMN_NAME || ')';
+            end loop;
+            dbms_output.put_line(ddl_out);
+        end loop;
+        for cnstrnt in (SELECT * FROM ALL_CONSTRAINTS WHERE OWNER=dev_schema AND table_name=tab."t_name" AND CONSTRAINT_TYPE='R' AND GENERATED='USER NAME') loop
+            for ref_name in (SELECT * FROM all_cons_columns a JOIN all_constraints c ON a.owner = c.owner AND a.constraint_name = c.constraint_name
+                                JOIN all_constraints c_pk ON c.r_owner = c_pk.owner AND c.r_constraint_name = c_pk.constraint_name
+                                    WHERE c.constraint_type = 'R' AND a.table_name = tab."t_name") loop
+            ddl_out := 'CONSTRAINT ' || ref_name.CONSTRAINT_NAME || ' FOREIGN KEY (' || ref_name.COLUMN_NAME || ') REFERENCES  ' || dev_schema || '."' || ref_name.table_name || '"' || '(' || ref_name.COLUMN_NAME || ');';
+            end loop;
+            dbms_output.put_line(ddl_out);
+        end loop;
+        dbms_output.put_line(')');
     END LOOP;
 
 --Модуль проверки функций (выводит)
@@ -204,38 +231,38 @@ BEGIN
 
 --Модуль проверки процедур (выводит)
     dbms_output.put_line('----PROCEDURE----');
-    for funct in (select * from all_objects WHERE object_type='PROCEDURE' AND owner=dev_schema) loop
-        select COUNT(*) into funct_count from all_objects where owner=prod_schema and object_type='PROCEDURE' and object_name=funct.object_name;
+    for proc in (select * from all_objects WHERE object_type='PROCEDURE' AND owner=dev_schema) loop
+        select COUNT(*) into funct_count from all_objects where owner=prod_schema and object_type='PROCEDURE' and object_name=proc.object_name;
         if funct_count=0 THEN
-            dbms_output.put_line(funct.object_name);
-            ddl_out := 'CREATE OR REPLACE PROCEDURE ' || prod_schema || '.' || funct.object_name || ' (';
+            dbms_output.put_line(proc.object_name);
+            ddl_out := 'CREATE OR REPLACE PROCEDURE ' || prod_schema || '.' || proc.object_name || ' (';
             dbms_output.put_line(ddl_out);
-            for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
+            for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=proc.object_name) loop
                 ddl_out := proc_out.ARGUMENT_NAME || ' in ' || proc_out.DATA_TYPE;
                 dbms_output.put_line(ddl_out);
             end loop;
             dbms_output.put_line(')');
         ELSE
-            SELECT count(*) into f1_arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name;
-            SELECT count(*) into f2_arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name;
+            SELECT count(*) into f1_arg_count from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=proc.object_name;
+            SELECT count(*) into f2_arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=proc.object_name;
             
             if f1_arg_count <> f2_arg_count then
-                dbms_output.put_line(funct.object_name);
-                ddl_out := 'CREATE OR REPLACE PROCEDURE ' || prod_schema || ' . ' || funct.object_name || ' (';
+                dbms_output.put_line(proc.object_name);
+                ddl_out := 'CREATE OR REPLACE PROCEDURE ' || prod_schema || ' . ' || proc.object_name || ' (';
                 dbms_output.put_line(ddl_out);
-                for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
+                for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=proc.object_name) loop
                     ddl_out := proc_out.ARGUMENT_NAME || ' in ' || proc_out.DATA_TYPE;
                     dbms_output.put_line(ddl_out);
                 end loop;
                 dbms_output.put_line(')');
             else
-                for arg in (select * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
-                    SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=funct.object_name and DATA_TYPE=arg.DATA_TYPE;
+                for arg in (select * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=proc.object_name) loop
+                    SELECT count(*) into arg_count from ALL_ARGUMENTS where owner=prod_schema AND OBJECT_NAME=proc.object_name and DATA_TYPE=arg.DATA_TYPE;
                     if arg_count=0 THEN
-                        dbms_output.put_line(funct.object_name);
-                        ddl_out := 'CREATE OR REPLACE PROCEDURE ' || prod_schema || '.' || funct.object_name || ' (';
+                        dbms_output.put_line(proc.object_name);
+                        ddl_out := 'CREATE OR REPLACE PROCEDURE ' || prod_schema || '.' || proc.object_name || ' (';
                         dbms_output.put_line(ddl_out);
-                        for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=funct.object_name) loop
+                        for proc_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=proc.object_name) loop
                             ddl_out := proc_out.ARGUMENT_NAME || ' in ' || proc_out.DATA_TYPE;
                             dbms_output.put_line(ddl_out);
                         end loop;
@@ -246,24 +273,63 @@ BEGIN
         end if;
     end loop;
 
---Модуль проверки пакетов
+--Модуль проверки пакетов (выводит)
     dbms_output.put_line('----Packages----');
     for pkg in (select * from all_objects WHERE object_type='PACKAGE' AND owner=dev_schema) loop
         select COUNT(*) into funct_count from all_objects where owner=prod_schema and object_type='PACKAGE' and object_name=pkg.OBJECT_NAME;
         if funct_count=0 THEN
             dbms_output.put_line(pkg.object_name);
+            ddl_out := 'CREATE or replace PACKAGE ' || prod_schema || '.' || pkg.object_name || ' AS';
+            dbms_output.put_line(ddl_out);
+            for proc_out in (select * from all_procedures where owner=dev_schema and object_name=pkg.object_name AND PROCEDURE_NAME is not NULL) loop
+                ddl_out := 'PROCEDURE ' || proc_out.PROCEDURE_NAME || '(';
+                dbms_output.put_line(ddl_out);
+                for arg_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=proc_out.PROCEDURE_NAME AND PACKAGE_NAME=pkg.object_name) loop
+                    ddl_out := arg_out.ARGUMENT_NAME || ' in ' || arg_out.DATA_TYPE;
+                    dbms_output.put_line(ddl_out);
+                end loop;
+                dbms_output.put_line(')');
+            end loop;
+            ddl_out := 'END ' || pkg.object_name || ';';
+            dbms_output.put_line(ddl_out);
         ELSE
             SELECT count(*) into f1_arg_count from all_procedures where owner=dev_schema AND OBJECT_NAME=pkg.OBJECT_NAME;
             SELECT count(*) into f2_arg_count from all_procedures where owner=prod_schema AND OBJECT_NAME=pkg.OBJECT_NAME;
             
             if f1_arg_count <> f2_arg_count then
                 dbms_output.put_line(pkg.object_name);
+                ddl_out := 'CREATE or replace PACKAGE ' || prod_schema || '.' || pkg.object_name || ' AS';
+                dbms_output.put_line(ddl_out);
+                for proc_out in (select * from all_procedures where owner=dev_schema and object_name=pkg.object_name AND PROCEDURE_NAME is not NULL) loop
+                    ddl_out := 'PROCEDURE ' || proc_out.PROCEDURE_NAME || '(';
+                    dbms_output.put_line(ddl_out);
+                    for arg_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=proc_out.object_name AND PACKAGE_NAME=pkg.object_name) loop
+                        ddl_out := arg_out.ARGUMENT_NAME || ' in ' || arg_out.DATA_TYPE;
+                        dbms_output.put_line(ddl_out);
+                    end loop;
+                    dbms_output.put_line(')');
+                end loop;
+                ddl_out := 'END ' || pkg.object_name || ';';
+                dbms_output.put_line(ddl_out);
             else
                 for proc_pkg in (select * from all_procedures where owner=dev_schema and object_name=pkg.object_name) loop
                     if proc_pkg.SUBPROGRAM_ID<>0 then
                         select COUNT(*) into funct_count from all_procedures where owner=prod_schema and object_name=pkg.object_name and PROCEDURE_NAME=proc_pkg.PROCEDURE_NAME;
                         if funct_count=0 THEN
                             dbms_output.put_line(pkg.object_name);
+                            ddl_out := 'CREATE or replace PACKAGE ' || prod_schema || '.' || pkg.object_name || ' AS';
+                            dbms_output.put_line(ddl_out);
+                            for proc_out in (select * from all_procedures where owner=dev_schema and object_name=pkg.object_name AND PROCEDURE_NAME is not NULL) loop
+                                ddl_out := 'PROCEDURE ' || proc_out.PROCEDURE_NAME || '(';
+                                dbms_output.put_line(ddl_out);
+                                for arg_out in (SELECT * from ALL_ARGUMENTS where owner=dev_schema AND OBJECT_NAME=proc_out.object_name AND PACKAGE_NAME=pkg.object_name) loop
+                                    ddl_out := arg_out.ARGUMENT_NAME || ' in ' || arg_out.DATA_TYPE;
+                                    dbms_output.put_line(ddl_out);
+                                end loop;
+                                dbms_output.put_line(')');
+                            end loop;
+                            ddl_out := 'END ' || pkg.object_name || ';';
+                            dbms_output.put_line(ddl_out);
                         end if;
                     end if;
                 end loop;
@@ -276,7 +342,7 @@ END;
 SELECT "t_name" FROM DIST_TABLES
 
 SELECT * FROM ALL_TAB_COLUMNS WHERE OWNER='LAB3_DEV';
-SELECT * FROM ALL_CONSTRAINTS WHERE OWNER='LAB3_DEV';
+
 SELECT * FROM ALL_TAB_COLUMNS WHERE table_name='ALL_CONSTRAINTS';
 
 ------------------------------------------------------------------------------
@@ -329,7 +395,30 @@ CREATE or replace PACKAGE LAB3_PROD.TESTPKG AS
 END TESTPKG;
 
 
-drop PACKAGE LAB3_dev.cust_sal;
+drop PACKAGE LAB3_PROD.TESTPKG;
 
-select * from all_objects WHERE object_type='PACKAGE' AND owner='LAB3_DEV';
+select * from all_objects WHERE object_name='HELLO_SECOND' AND owner='LAB3_DEV';
 select * from all_procedures where owner='LAB3_DEV' and object_name='TESTPKG';
+SELECT * FROM ALL_TAB_COLUMNS WHERE table_name='supplier' AND OWNER='LAB3_DEV';
+
+select table_name, constraint_name, status, owner
+from all_constraints
+where r_owner = 'supplier'
+and constraint_type = 'R'
+and r_constraint_name in
+ (
+   select constraint_name from all_constraints
+   where constraint_type in ('P', 'U')
+   and table_name = 'products'
+   and owner = 'LAB3_DEV'
+ )
+order by table_name, constraint_name
+
+SELECT *
+  FROM all_cons_columns a
+  JOIN all_constraints c ON a.owner = c.owner
+                        AND a.constraint_name = c.constraint_name
+  JOIN all_constraints c_pk ON c.r_owner = c_pk.owner
+                           AND c.r_constraint_name = c_pk.constraint_name
+ WHERE c.constraint_type = 'R'
+   AND a.table_name = 'products'
