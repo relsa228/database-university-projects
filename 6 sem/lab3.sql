@@ -52,21 +52,11 @@ ALTER USER LAB3_PROD QUOTA UNLIMITED ON USERS;
 GRANT CONNECT, RESOURCE TO LAB3_DEV;
 GRANT CONNECT, RESOURCE TO LAB3_PROD;
 
-DROP table DIST_TABLES;
-DROP table OUT_TABLES;
-create table DIST_TABLES (
-        "t_name"  varchar2(128) not null
-    );
-
-create table OUT_TABLES (
-    "t_name"  varchar2(128) not null
-);
+EXECUTE f();
 ------------------------------------------------------------------------------
 --1. Сравнение таблиц
-DECLARE
-    dev_schema varchar2(225) := 'LAB3_DEV';
-    prod_schema varchar2(225) := 'LAB3_PROD';
 
+create or replace procedure COMPARE_SCHEMES(dev_schema in varchar2, prod_schema in varchar2) as
     ref_table varchar2(225);
     ref_constrain varchar2(225);
 
@@ -446,17 +436,14 @@ BEGIN
             end if;
         end if;
     end loop;
-END;
+END COMPARE_SCHEMES;
 
-
+--НЕ ПРОЦЕДУРА
+call funct('LAB3_DEV', 'LAB3_PROD');
 SELECT "t_name" FROM DIST_TABLES
-
 SELECT * FROM ALL_TAB_COLUMNS WHERE OWNER='LAB3_DEV';
-
 SELECT * FROM ALL_TAB_COLUMNS WHERE table_name='ALL_CONSTRAINTS';
 
-------------------------------------------------------------------------------
---2. Сравнение функций
 select *
 from   all_objects
 where  owner = 'LAB3_DEV'
@@ -466,6 +453,7 @@ select * from ALL_ARGUMENTS where owner='LAB3_DEV' and OBJECT_NAME='HELLO_SECOND
 
 create or replace function LAB3_dev.hello
 return number
+
 is
     parity_counter number;
     odd_counter number;
@@ -532,3 +520,10 @@ SELECT *
                            AND c.r_constraint_name = c_pk.constraint_name
  WHERE c.constraint_type = 'R'
    AND a.table_name = 'products'
+--НЕ ПРОЦЕДУРА
+
+DROP TABLE DIST_TABLES;
+DROP TABLE OUT_TABLES;
+create table DIST_TABLES ("t_name"  varchar2(128) not null);
+create table OUT_TABLES ("t_name"  varchar2(128) not null);
+call COMPARE_SCHEMES('LAB3_DEV', 'LAB3_PROD');
