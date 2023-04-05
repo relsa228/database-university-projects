@@ -23,6 +23,7 @@ create table LAB3_DEV."students"
 
 DROP TABLE LAB3_DEV."products";
 CREATE TABLE LAB3_DEV."products" ( 
+    constraint dd_pk PRIMARY KEY (product_id)
     product_id numeric(10) not null,
     supplier_id numeric(10) not null,
     CONSTRAINT fk_supplier
@@ -32,15 +33,25 @@ CREATE TABLE LAB3_DEV."products" (
 
 DROP TABLE LAB3_DEV."supplier";
 CREATE TABLE LAB3_DEV."supplier"
-( supplier_id numeric(10) not null,
+( 
+    product_id numeric(10) not null,
+    supplier_id numeric(10) not null,
   supplier_name varchar2(50) not null,
   contact_name varchar2(50),
   CONSTRAINT supplier_pk PRIMARY KEY (supplier_id)
+  CONSTRAINT fk_dd FOREIGN KEY (product_id)
+    REFERENCES  LAB3_DEV."supplier"(product_id)
 );
 
 
 ------------------------------------------------------------------------------
 --0. Создание юзеров для лабы
+ALTER SESSION SET "_oracle_script"=TRUE;
+DROP USER LAB3_DEV CASCADE;
+
+ALTER SESSION SET "_oracle_script"=TRUE;
+DROP USER LAB3_PROD CASCADE;
+
 ALTER SESSION SET "_oracle_script"=TRUE;
 CREATE USER LAB3_DEV;
 ALTER USER LAB3_DEV QUOTA UNLIMITED ON USERS;
@@ -52,7 +63,6 @@ ALTER USER LAB3_PROD QUOTA UNLIMITED ON USERS;
 GRANT CONNECT, RESOURCE TO LAB3_DEV;
 GRANT CONNECT, RESOURCE TO LAB3_PROD;
 
-EXECUTE f();
 ------------------------------------------------------------------------------
 --1. Сравнение таблиц
 
@@ -66,6 +76,7 @@ create or replace procedure COMPARE_SCHEMES(dev_schema in varchar2, prod_schema 
     ref_table_count NUMBER;
 
     input_flag BOOLEAN := TRUE;
+    loop_flag BOOLEAN := FALSE;
 
     funct_count NUMBER;
     f1_arg_count NUMBER;
@@ -75,7 +86,7 @@ create or replace procedure COMPARE_SCHEMES(dev_schema in varchar2, prod_schema 
     ddl_out varchar2(225);
     funct_ending varchar2(225);
 BEGIN
---Модуль обхода дев_таблицы и поиска отличий
+--Модуль обхода dev таблиц и поиска отличий
     for tab in (select * from ALL_TABLES WHERE OWNER=dev_schema) loop
         SELECT COUNT(*) INTO tab_count FROM ALL_TABLES WHERE OWNER=prod_schema AND TABLE_NAME=tab.TABLE_NAME;
         IF tab_count=1 THEN
@@ -98,12 +109,26 @@ BEGIN
     SELECT COUNT(*) INTO dist_tab_count FROM DIST_TABLES;
     WHILE dist_tab_count <> 0 LOOP
         for tab in (SELECT * FROM DIST_TABLES) LOOP
-            for f_key in (SELECT * FROM ALL_CONSTRAINTS WHERE OWNER=dev_schema AND table_name=tab."t_name" AND CONSTRAINT_TYPE='R') loop
-                SELECT TABLE_NAME into ref_table from ALL_CONSTRAINTS WHERE CONSTRAINT_NAME=f_key.R_CONSTRAINT_NAME;
+            for f_key in (select src_cc.table_name as src_table from all_constraints c inner join all_cons_columns dest_cc on
+                            c.r_constraint_name=dest_cc.constraint_name and c.r_owner=dest_cc.owner inner join all_cons_columns src_cc on
+                                c.constraint_name=src_cc.constraint_name and c.owner=src_cc.owner where c.constraint_type='R'
+                                    and dest_cc.owner=dev_schema AND dest_cc.table_name=tab."t_name") loop
+                
+                SELECT COUNT(*) into ref_table_count FROM OUT_TABLES WHERE "t_name"=f_key.SRC_TABLE;
+                
+                for lp in (select dest_cc.table_name as dest_table from all_constraints c inner join all_cons_columns dest_cc on
+                            c.r_constraint_name=dest_cc.constraint_name and c.r_owner=dest_cc.owner inner join all_cons_columns src_cc on
+                                c.constraint_name=src_cc.constraint_name and c.owner=src_cc.owner where c.constraint_type='R'
+                                    and dest_cc.owner=dev_schema AND src_cc.table_name=tab."t_name") loop
+                    
+                    if lp.dest_table=f_key.SRC_TABLE then
+                        ddl_out := 'Looping ref ' || f_key.SRC_TABLE || ' ' || tab."t_name";
+                        dbms_output.put_line(ddl_out);
+                        loop_flag := TRUE;
+                    end if;
+                end loop;
 
-                SELECT COUNT(*) into ref_table_count FROM OUT_TABLES WHERE "t_name"=ref_table;
-
-                if ref_table_count=0 then
+                IF ref_table_count=0 AND not loop_flag then
                     input_flag:=FALSE;
                 END IF;
             end loop;
@@ -113,8 +138,9 @@ BEGIN
                 INSERT INTO OUT_TABLES VALUES (tab."t_name");
             END IF;
             input_flag:=TRUE;
+            loop_flag := FALSE;
+            SELECT COUNT(*) INTO dist_tab_count FROM DIST_TABLES;
         END LOOP;
-        SELECT COUNT(*) INTO dist_tab_count FROM DIST_TABLES;
     END LOOP;
 
     dbms_output.put_line('--------TABLES--------');
@@ -139,7 +165,12 @@ BEGIN
             end loop;
             dbms_output.put_line(ddl_out);
         end loop;
-        for cnstrnt in (SELECT * FROM ALL_CONSTRAINTS WHERE OWNER=dev_schema AND table_name=tab."t_name" AND CONSTRAINT_TYPE='R' AND GENERATED='USER NAME') loop
+        for cnstrnt in (select src_cc.owner as src_owner, src_cc.table_name as src_table, src_cc.column_name as src_column,
+                            dest_cc.owner as dest_owner, dest_cc.table_name as dest_table, dest_cc.column_name as dest_column, c.constraint_name
+                                from all_constraints c inner join all_cons_columns dest_cc on c.r_constraint_name = dest_cc.constraint_name
+                                    and c.r_owner = dest_cc.owner inner join all_cons_columns src_cc on c.constraint_name = src_cc.constraint_name
+                                        and c.owner = src_cc.owner where c.constraint_type = 'R' and dest_cc.owner = dev_schema
+                                            and dest_cc.table_name = tab."t_name") loop
             for ref_name in (SELECT * FROM all_cons_columns a JOIN all_constraints c ON a.owner = c.owner AND a.constraint_name = c.constraint_name
                                 JOIN all_constraints c_pk ON c.r_owner = c_pk.owner AND c.r_constraint_name = c_pk.constraint_name
                                     WHERE c.constraint_type = 'R' AND a.table_name = tab."t_name") loop
@@ -438,6 +469,59 @@ BEGIN
     end loop;
 END COMPARE_SCHEMES;
 
+DROP TABLE DIST_TABLES;
+DROP TABLE OUT_TABLES;
+create table DIST_TABLES ("t_name"  varchar2(128) not null);
+create table OUT_TABLES ("t_name"  varchar2(128) not null);
+call COMPARE_SCHEMES('LAB3_DEV', 'LAB3_PROD');
+
+
+
+
+
+drop table LAB3_DEV."Room";
+drop table  LAB3_DEV."RoomType" cascade;
+
+
+CREATE TABLE LAB3_DEV."Room"(Room_ID int PRIMARY KEY, Price INT, Reservation_ID int,Gust_ID int );
+--CREATE TABLE LAB3_DEV."Gust" ( Gust_ID INT PRIMARY KEY, First_Name VARCHAR(50), Last_Name VARCHAR(50), Email VARCHAR(20), phone_number INT, Address VARCHAR(30) );
+--CREATE TABLE LAB3_DEV."Reservation" ( Reservation_ID INT PRIMARY KEY, Start_Date Date, End_Date Date );
+CREATE TABLE LAB3_DEV."RoomType" ( RoomType_ID INT NOT NULL PRIMARY KEY, Class VARCHAR(10), ExtraPrice INT);
+
+ALTER TABLE LAB3_DEV."Room" ADD FOREIGN KEY (price) REFERENCES LAB3_DEV."RoomType"(RoomType_ID);
+ALTER TABLE LAB3_DEV."RoomType" ADD FOREIGN KEY (ExtraPrice) REFERENCES LAB3_DEV."Room"(Room_ID);
+
+
+CREATE TABLE LAB3_DEV."tab1"(id int PRIMARY KEY, val INT);
+CREATE TABLE LAB3_DEV."tab2"(id int PRIMARY KEY, val INT);
+CREATE TABLE LAB3_DEV."tab3"(id int PRIMARY KEY, val INT);
+
+drop table LAB3_DEV."tab1";
+drop table LAB3_DEV."tab2";
+drop table LAB3_DEV."tab3";
+
+ALTER TABLE LAB3_DEV."tab2" ADD FOREIGN KEY (val) REFERENCES LAB3_DEV."tab1"(id);
+ALTER TABLE LAB3_DEV."tab1" ADD FOREIGN KEY (val) REFERENCES LAB3_DEV."tab3"(id);
+
+2->1
+1->3
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 --НЕ ПРОЦЕДУРА
 call funct('LAB3_DEV', 'LAB3_PROD');
 SELECT "t_name" FROM DIST_TABLES
@@ -462,7 +546,17 @@ begin
     return 1;
 end;
 
-create or replace function LAB3_prod.hello_second(salary in number, percent in VARCHAR2)
+create or replace function LAB3_PROD.hello_second(salary in number, percent in VARCHAR2)
+return BOOLEAN
+is
+    parity_counter number;
+    odd_counter number;
+begin
+    dbms_output.put_line('Hello'); 
+    return true;
+end;
+
+create or replace function LAB3_DEV.hello_second(salary in number, percent in VARCHAR2)
 return number
 is
     parity_counter number;
@@ -522,8 +616,25 @@ SELECT *
    AND a.table_name = 'products'
 --НЕ ПРОЦЕДУРА
 
-DROP TABLE DIST_TABLES;
-DROP TABLE OUT_TABLES;
-create table DIST_TABLES ("t_name"  varchar2(128) not null);
-create table OUT_TABLES ("t_name"  varchar2(128) not null);
-call COMPARE_SCHEMES('LAB3_DEV', 'LAB3_PROD');
+select
+  src_cc.owner as src_owner,
+  src_cc.table_name as src_table,
+  src_cc.column_name as src_column,
+  dest_cc.owner as dest_owner,
+  dest_cc.table_name as dest_table,
+  dest_cc.column_name as dest_column,
+  c.constraint_name
+from
+  all_constraints c
+inner join all_cons_columns dest_cc on
+  c.r_constraint_name = dest_cc.constraint_name
+  and c.r_owner = dest_cc.owner
+inner join all_cons_columns src_cc on
+  c.constraint_name = src_cc.constraint_name
+  and c.owner = src_cc.owner
+where
+  c.constraint_type = 'R'
+  and dest_cc.owner = 'LAB3_DEV'
+  and dest_cc.table_name = 'tab3'
+  --and dest_cc.column_name = 'MY_OPTIONNAL_TARGET_COLUMN'
+;
