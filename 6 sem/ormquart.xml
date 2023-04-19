@@ -1,0 +1,21 @@
+<SELECT>
+    <columns>
+        <column>col1</column>
+        <column>col2</column>
+        <column>col3</column>
+    </columns>
+    <from>
+        <tab>tab1</tab>
+    </from>
+    <joins>
+        <join>
+            <type>LEFT JOIN</type>
+            <tab>tab2</tab>
+            <condition>tab1.col1 = tab2.col2</condition>
+        </join>
+    </joins>
+    <where>
+        <condition>col1 = 5</condition>
+        <condition>col2 = 8</condition>
+    </where>
+</SELECT>
