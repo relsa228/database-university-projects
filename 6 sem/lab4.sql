@@ -53,17 +53,15 @@ END;
 
 CREATE OR REPLACE Function LAB4.XMLSelectInit
    (xml_expression IN varchar2)
-   RETURN CURSOR
+   RETURN sys_refcursor
 IS
-    l_cursor_id CURSOR;
+    cur  sys_refcursor;
     out_select varchar(7000);
 BEGIN
     out_select := LAB4.XMLSELECT(xml_expression);
-    l_cursor_id := DBMS_SQL.OPEN_CURSOR;
-    DBMS_SQL.PARSE(l_cursor_id, out_select, DBMS_SQL.NATIVE);
-
+    OPEN cur;
     dbms_output.put_line(out_select || CHR(10));
-    return l_cursor_id;
+    return cur;
 end;
 
 ------------------------------------------------------------------------------
@@ -242,37 +240,31 @@ END;
 BEGIN
     dbms_output.put_line(LAB4.XMLCREATE('<create>
     <user>LAB4</user>
-    <name>tab_name_6</name>
+    <name>t1</name>
     <columns>
         <column>
             <column_name>id</column_name>
             <datatype>NUMBER</datatype>
-            <not_null>true</not_null>
+            <not_null>false</not_null>
             <default></default>
         </column>
         <column>
-            <column_name>col1</column_name>
-            <datatype>VARCHAR(10)</datatype>
-            <not_null>true</not_null>
-            <default>''112''</default>
+            <column_name>num</column_name>
+            <datatype>NUMBER</datatype>
+            <not_null>false</not_null>
+            <default></default>
         </column>
         <column>
-            <column_name>col2</column_name>
+            <column_name>val</column_name>
             <datatype>VARCHAR(10)</datatype>
             <not_null>false</not_null>
-            <default>''112''</default>
-        </column>
-        <column>
-            <column_name>col3</column_name>
-            <datatype>VARCHAR(10)</datatype>
-            <not_null>true</not_null>
-            <default>''112''</default>
+            <default></default>
         </column>
     </columns>
     <constraints>
         <primary_key>
             <column_name>id</column_name>
-            <constraint_name>pk_id_6</constraint_name>
+            <constraint_name>pk_t1</constraint_name>
         </primary_key>
     </constraints>
 </create>'));
@@ -317,38 +309,61 @@ BEGIN
 </drop>'));
 end;
 
+
+select   from dual;
+
 BEGIN
-    dbms_output.put_line(LAB4.XMLSELECTINIT('<SELECT>
+    dbms_output.put_line(LAB4.XMLSelect('<SELECT>
     <columns>
-        <column>col1</column>
-        <column>col2</column>
-        <column>col3</column>
+        <column>id</column>
+        <column>num</column>
+        <column>val</column>
     </columns>
     <from>
-        <tab>LAB4."tab_name"</tab>
+        <tab>LAB4."t1"</tab>
     </from>
     <where>
         <nesting>
             <nesting_type>IN</nesting_type>
-            <column>id</column>
+            <column>t1.id</column>
             <SELECT>
                 <columns>
                     <column>id</column>
                 </columns>
                 <from>
-                    <tab>LAB4."tab_name"</tab>
+                    <tab>LAB4."t2"</tab>
                 </from>
                 <where>
-                    <condition>"tab_name".id = 1</condition>
+                    <condition>"t2".num between 2 and 4</condition>
+                    <condition>and val like ''%a%''</condition>
                 </where>
             </SELECT>
         </nesting>
     </where>
 </SELECT>'));
-end;
+END;
 
-SELECT col1, col2, col3 FROM LAB4."tab_name"
-		 WHERE
-		id IN (SELECT id FROM
-LAB4."tab_name"
-		 WHERE "tab_name".id = 1 );
+
+CREATE TABLE LAB4."t1" (
+id NUMBER ,
+num NUMBER ,
+val VARCHAR(10) ,
+ CONSTRAINT
+pk_t1 PRIMARY KEY (id)
+);
+
+create sequence LAB4.t1_id_seq
+start with 1
+increment
+by 1;
+
+
+
+CREATE OR REPLACE TRIGGER LAB4.t1_id_trigger
+BEFORE INSERT ON
+LAB4."t1"
+FOR EACH ROW
+BEGIN
+select LAB4.t1_id_seq.nextval INTO :new."ID" FROM
+dual;
+END;
